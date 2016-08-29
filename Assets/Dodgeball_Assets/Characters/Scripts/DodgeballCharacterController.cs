@@ -4,35 +4,21 @@ using System.Collections.Generic;
 
 public class DodgeballCharacterController : MonoBehaviour
 {
-
+    public Plane plane;
     public float movementSpeed = 2.0f;
     public float range = 100.0f;
+    public float throwSpeed = 5.0f;
     public float gravity = 7.8F;
     public Rigidbody ball1;
     public Rigidbody ball2;
     public Rigidbody ball3;
-    public Camera camera;
-
 
     private Vector3 movementDirection = Vector3.zero;
-    CharacterController character;
-
-
-
-    //public GameObject ball1;
-    //public GameObject ball2;
-    //public GameObject ball3;
-    //List<GameObject> lstOfBalls;
-    //GameObject ballHeld;
-
-    List<Rigidbody> lstOfBalls;
-
-
-    Rigidbody ballHeld;
-
-    GameObject closestObj = null;
-
-    bool testThrow = false;
+    private RaycastHit hit;
+    private float rayCastLength = 500;
+    private CharacterController character;
+    private List<Rigidbody> lstOfBalls;
+    private Rigidbody ballHeld;
 
     // Use this for initialization
     void Start()
@@ -45,6 +31,8 @@ public class DodgeballCharacterController : MonoBehaviour
         lstOfBalls.Add(ball1);
         lstOfBalls.Add(ball2);
         lstOfBalls.Add(ball3);
+
+        //plane = GetComponent<Plane>();
     }
 
     // Update is called once per frame
@@ -79,8 +67,13 @@ public class DodgeballCharacterController : MonoBehaviour
             ballHeld.transform.position = character.transform.position + new Vector3(0, 0, 1.5f);
         }
 
-        
-        Debug.DrawLine(Vector3.zero, new Vector3(0.0f, 5.0f, 0.0f), Color.red);
+#if DEBUG 
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Debug.DrawRay(ray.origin, ray.direction * rayCastLength, Color.yellow);
+#else
+
+#endif
+
     }
 
     private Rigidbody GetNearBalls()
@@ -118,23 +111,16 @@ public class DodgeballCharacterController : MonoBehaviour
 
     private void ThrowBall()
     {
-        //Vector3 force = camera.ScreenToWorldPoint(Input.mousePosition) - controller.transform.position;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        float distFromPlane;
 
-
-
-
-        //force.Normalize();
-
-        //ballHeld.AddForce(force);
-
-        Ray ray = camera.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-
-        Debug.DrawLine(character.transform.position, ray.origin);
-
-        if (Physics.Raycast(ray, out hit, 1000))
+        //if (Physics.Raycast(ray, out hit, rayCastLength))
+        if (plane.Raycast(ray, out distFromPlane))
         {
-            Debug.DrawLine(character.transform.position, hit.point);
+            Vector3 point = ray.GetPoint(distFromPlane);
+            //Vector3 direction = character.transform.position - hit.point;
+            Vector3 direction = character.transform.position - point;
+            ballHeld.AddForce(direction.normalized * throwSpeed);
         }
     }
 }
