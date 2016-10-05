@@ -7,7 +7,7 @@ public class DodgeballCharacterController : MonoBehaviour
     public Plane plane;
     public float movementSpeed = 2.0f;
     public float range = 100.0f;
-    public float throwSpeed = 5.0f;
+    public float throwSpeed = 500.0f;
     public float gravity = 7.8F;
     public Rigidbody ball1;
     public Rigidbody ball2;
@@ -19,6 +19,8 @@ public class DodgeballCharacterController : MonoBehaviour
     private CharacterController character;
     private List<Rigidbody> lstOfBalls;
     private Rigidbody ballHeld;
+
+    bool tempBool = false;
 
     // Use this for initialization
     void Start()
@@ -112,15 +114,26 @@ public class DodgeballCharacterController : MonoBehaviour
     private void ThrowBall()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        float distFromPlane;
+        RaycastHit[] hits;
+        hits = Physics.RaycastAll(ray);
 
-        //if (Physics.Raycast(ray, out hit, rayCastLength))
-        if (plane.Raycast(ray, out distFromPlane))
+        Vector3 point = ray.GetPoint(hits[0].distance);
+        Vector3 direction = character.transform.position - point;
+
+        for (int i = 0; i < lstOfBalls.Count; i++)
         {
-            Vector3 point = ray.GetPoint(distFromPlane);
-            //Vector3 direction = character.transform.position - hit.point;
-            Vector3 direction = character.transform.position - point;
-            ballHeld.AddForce(direction.normalized * throwSpeed);
+            if (ballHeld == lstOfBalls[i])
+            {
+                ballHeld = null;
+                
+                lstOfBalls[i].velocity = Vector3.zero;
+
+                Vector3 force = direction.normalized * throwSpeed;
+                force = new Vector3(-force.x, force.y, -force.z);
+                lstOfBalls[i].AddForce(force, ForceMode.Force);
+
+                break;
+            }
         }
     }
 }
